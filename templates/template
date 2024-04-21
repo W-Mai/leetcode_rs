@@ -1,0 +1,26 @@
+/**
+ * [{{ problem_id }}] {{ problem_title }}
+ *
+ * {{ problem_desc }}
+ */
+pub struct Solution {}
+
+{{ extra_use }}
+
+// problem: {{ problem_link }}
+// discuss: {{ discuss_link }}
+
+// submission codes start here
+
+{{ problem_default_code }}
+
+// submission codes end
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_{{ problem_id }}() {
+    }
+}
