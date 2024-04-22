@@ -24,5 +24,6 @@ fn main() {
         extra_use: "",
         problem_default_code: "",
     };
-    println!("{}", hello.render().unwrap());
+
+    std::fs::write("./template.rs", hello.render().unwrap()).unwrap();
 }

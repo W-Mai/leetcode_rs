@@ -10,11 +10,11 @@ pub struct Solution {}
 // problem: {{ problem_link }}
 // discuss: {{ discuss_link }}
 
-// submission codes start here
+// >>> SUBMISSION CODES START HERE <<<
 
 {{ problem_default_code }}
 
-// submission codes end
+// >>>    SUBMISSION CODES END     <<<
 
 #[cfg(test)]
 mod tests {
