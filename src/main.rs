@@ -2,28 +2,48 @@ use askama::Template;
 
 #[derive(Template)]
 #[template(path = "template")]
-struct QuestionTemplate<'a> {
-    problem_id: &'a str,
-    problem_title: &'a str,
-    problem_desc: &'a str,
+struct QuestionTemplate {
+    problem_id: String,
+    problem_title: String,
+    problem_desc: String,
 
-    problem_link: &'a str,
-    discuss_link: &'a str,
+    problem_link: String,
+    discuss_link: String,
 
-    extra_use: &'a str,
-    problem_default_code: &'a str,
+    extra_use: String,
+    problem_default_code: String,
+}
+
+impl QuestionTemplate {
+    fn new(
+        problem_id: u32,
+        problem_title: String,
+        problem_desc: String,
+        problem_link: String,
+        discuss_link: String,
+        extra_use: String,
+        problem_default_code: String,
+    ) -> Self {
+        QuestionTemplate {
+            problem_id: format!("{:06}", problem_id),
+            problem_title,
+            problem_desc,
+            problem_link,
+            discuss_link,
+            extra_use,
+            problem_default_code,
+        }
+    }
 }
 
 fn main() {
-    let hello = QuestionTemplate {
-        problem_id: "world",
-        problem_title: "",
-        problem_desc: "",
-        problem_link: "",
-        discuss_link: "",
-        extra_use: "",
-        problem_default_code: "",
-    };
+    let hello = QuestionTemplate::new(20,
+                                      "Hello".to_string(),
+                                      "World".to_string(),
+                                      "".to_string(),
+                                      "".to_string(),
+                                      "".to_string(),
+                                      "".to_string());
 
     std::fs::write("./template.rs", hello.render().unwrap()).unwrap();
 }
