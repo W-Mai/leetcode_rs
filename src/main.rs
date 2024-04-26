@@ -34,16 +34,23 @@ impl QuestionTemplate {
             problem_default_code,
         }
     }
+
+    fn write(&self, path: &str) -> bool {
+        if let Ok(rendered) = self.render() {
+            return std::fs::write(path, rendered).is_ok();
+        }
+        false
+    }
 }
 
 fn main() {
-    let hello = QuestionTemplate::new(20,
-                                      "Hello".to_string(),
-                                      "World".to_string(),
-                                      "".to_string(),
-                                      "".to_string(),
-                                      "".to_string(),
-                                      "".to_string());
+    let template = QuestionTemplate::new(20,
+                                         "Hello".to_string(),
+                                         "World".to_string(),
+                                         "".to_string(),
+                                         "".to_string(),
+                                         "".to_string(),
+                                         "".to_string());
 
-    std::fs::write("./template.rs", hello.render().unwrap()).unwrap();
+    template.write("template.rs");
 }
