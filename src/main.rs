@@ -1,6 +1,8 @@
 mod problems;
+mod fetcher;
 
 use askama::Template;
+use futures::executor::block_on;
 
 #[derive(Template)]
 #[template(path = "template")]
@@ -45,14 +47,9 @@ impl QuestionTemplate {
     }
 }
 
-fn main() {
-    let template = QuestionTemplate::new(20,
-                                         "Hello".to_string(),
-                                         "World".to_string(),
-                                         "".to_string(),
-                                         "".to_string(),
-                                         "".to_string(),
-                                         "".to_string());
-
-    template.write("tests/S000001.rs");
+#[tokio::main]
+async fn main() {
+    if let Some(problems) = block_on(fetcher::get_problems()) {
+        println!("{:?}", problems);
+    }
 }
