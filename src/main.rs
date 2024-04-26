@@ -1,3 +1,5 @@
+mod problems;
+
 use askama::Template;
 
 #[derive(Template)]
@@ -52,5 +54,5 @@ fn main() {
                                          "".to_string(),
                                          "".to_string());
 
-    template.write("template.rs");
+    template.write("tests/S000001.rs");
 }
