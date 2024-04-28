@@ -50,6 +50,12 @@ impl QuestionTemplate {
 #[tokio::main]
 async fn main() {
     if let Some(problems) = block_on(fetcher::get_problems()) {
-        println!("{:?}", problems);
+        let first = problems.stat_status_pairs.first();
+        if let Some(first) = first {
+            let problem = block_on(fetcher::get_problem(first));
+            if let Some(problem) = problem {
+                println!("{:?}", problem);
+            }
+        }
     }
 }

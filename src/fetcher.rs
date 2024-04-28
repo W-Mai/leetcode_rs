@@ -2,11 +2,22 @@ extern crate reqwest;
 extern crate serde_json;
 
 use std::fmt::{Display, Error, Formatter};
-use reqwest::Response;
 use serde::{Deserialize, Serialize};
+use serde_json::{json, Value};
 
 const PROBLEMS_URL: &str = "https://leetcode.cn/api/problems/algorithms";
 const GRAPHQL_URL: &str = "https://leetcode.cn/graphql";
+
+const QUESTION_QUERY_STRING: &str = r#"
+query questionData($titleSlug: String!) {
+    question(titleSlug: $titleSlug) {
+        content
+        stats
+        codeDefinition
+        sampleTestCase
+        metaData
+    }
+}"#;
 
 const QUESTION_QUERY_OPERATION: &str = "questionData";
 
@@ -16,6 +27,48 @@ pub async fn get_problems() -> Option<Problems> {
         .get(PROBLEMS_URL)
         .send().await.ok()?
         .json().await.ok()?
+}
+
+pub async fn get_problem(problem_stat: &StatWithStatus) -> Option<Problem> {
+    if problem_stat.paid_only {
+        println!(
+            "Problem {} is paid-only",
+            &problem_stat.stat.frontend_question_id
+        );
+        return None;
+    }
+    let resp = surf::post(GRAPHQL_URL).body_json(&Query::question_query(
+        problem_stat.stat.question_title_slug.as_ref().unwrap(),
+    ));
+    if resp.is_err() {
+        println!(
+            "Problem {} not initialized due to some error",
+            &problem_stat.stat.frontend_question_id
+        );
+        return None;
+    }
+    let resp = resp.unwrap().recv_json().await;
+    if resp.is_err() {
+        println!(
+            "Problem {} not initialized due to some error",
+            &problem_stat.stat.frontend_question_id
+        );
+        return None;
+    }
+    let resp: RawProblem = resp.unwrap();
+    return Some(Problem {
+        title: problem_stat.stat.question_title.clone().unwrap(),
+        title_slug: problem_stat.stat.question_title_slug.clone().unwrap(),
+        code_definition: serde_json::from_str(&resp.data.question.code_definition).unwrap(),
+        content: resp.data.question.content,
+        sample_test_case: resp.data.question.sample_test_case,
+        difficulty: problem_stat.difficulty.to_string(),
+        question_id: problem_stat.stat.frontend_question_id.clone(),
+        return_type: {
+            let v: Value = serde_json::from_str(&resp.data.question.meta_data).unwrap();
+            v["return"]["type"].to_string().replace("\"", "")
+        },
+    });
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -73,7 +126,7 @@ impl Display for Difficulty {
 }
 
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Problem {
     pub title: String,
     pub title_slug: String,
@@ -83,14 +136,54 @@ pub struct Problem {
     #[serde(rename = "sampleTestCase")]
     pub sample_test_case: String,
     pub difficulty: String,
-    pub question_id: u32,
+    pub question_id: String,
     pub return_type: String,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
+struct RawProblem {
+    data: Data,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Data {
+    question: Question,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Question {
+    content: String,
+    stats: String,
+    #[serde(rename = "codeDefinition")]
+    code_definition: String,
+    #[serde(rename = "sampleTestCase")]
+    sample_test_case: String,
+    #[serde(rename = "metaData")]
+    meta_data: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CodeDefinition {
     pub value: String,
     pub text: String,
     #[serde(rename = "defaultCode")]
     pub default_code: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Query {
+    #[serde(rename = "operationName")]
+    operation_name: String,
+    variables: serde_json::Value,
+    query: String,
+}
+
+impl Query {
+    fn question_query(title_slug: &str) -> Query {
+        Query {
+            operation_name: QUESTION_QUERY_OPERATION.to_owned(),
+            variables: json!({ "titleSlug": title_slug }),
+            query: QUESTION_QUERY_STRING.to_owned(),
+        }
+    }
 }
