@@ -55,12 +55,27 @@ pub async fn get_problem(problem_stat: &StatWithStatus) -> Option<Problem> {
         );
         return None;
     }
+
+    let translation_resp = surf::post(GRAPHQL_URL).body_json(&Query::translation_query(
+        problem_stat.stat.question_title_slug.as_ref().unwrap(),
+    ));
+
+    let translation_resp = translation_resp.unwrap().recv_json().await;
+    if translation_resp.is_err() {
+        println!(
+            "Problem {} not initialized due to some error",
+            &problem_stat.stat.frontend_question_id
+        );
+        return None;
+    }
+
     let resp: RawProblem = resp.unwrap();
+    let translation_resp: TranslationResponse = translation_resp.unwrap();
     return Some(Problem {
         title: problem_stat.stat.question_title.clone().unwrap(),
         title_slug: problem_stat.stat.question_title_slug.clone().unwrap(),
         code_definition: serde_json::from_str(&resp.data.question.code_definition).unwrap(),
-        content: resp.data.question.content,
+        content: translation_resp.data.question.translated_content,
         sample_test_case: resp.data.question.sample_test_case,
         difficulty: problem_stat.difficulty.to_string(),
         question_id: problem_stat.stat.frontend_question_id.clone(),
@@ -146,8 +161,18 @@ struct RawProblem {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+struct TranslationResponse {
+    data: TranslationData,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 struct Data {
     question: Question,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct TranslationData {
+    question: Translation,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -160,6 +185,14 @@ struct Question {
     sample_test_case: String,
     #[serde(rename = "metaData")]
     meta_data: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct Translation {
+    #[serde(rename = "translatedTitle")]
+    translated_title: String,
+    #[serde(rename = "translatedContent")]
+    translated_content: String,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -184,6 +217,20 @@ impl Query {
             operation_name: QUESTION_QUERY_OPERATION.to_owned(),
             variables: json!({ "titleSlug": title_slug }),
             query: QUESTION_QUERY_STRING.to_owned(),
+        }
+    }
+
+    fn translation_query(title_slug: &str) -> Query {
+        Query {
+            operation_name: "questionTranslation".to_owned(),
+            variables: json!({ "titleSlug": title_slug }),
+            query: r#"
+            query questionTranslation($titleSlug: String!) {
+                question(titleSlug: $titleSlug) {
+                    translatedTitle
+                    translatedContent
+                }
+            }"#.to_owned(),
         }
     }
 }
