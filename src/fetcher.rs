@@ -1,9 +1,9 @@
 extern crate reqwest;
 extern crate serde_json;
 
-use std::fmt::{Display, Error, Formatter};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::fmt::{Display, Error, Formatter};
 
 const PROBLEMS_URL: &str = "https://leetcode.cn/api/problems/algorithms";
 const GRAPHQL_URL: &str = "https://leetcode.cn/graphql";
@@ -25,8 +25,12 @@ pub async fn get_problems() -> Option<Problems> {
     let client = reqwest::Client::new();
     client
         .get(PROBLEMS_URL)
-        .send().await.ok()?
-        .json().await.ok()?
+        .send()
+        .await
+        .ok()?
+        .json()
+        .await
+        .ok()?
 }
 
 pub async fn get_problem(problem_stat: &StatWithStatus) -> Option<Problem> {
@@ -140,7 +144,6 @@ impl Display for Difficulty {
     }
 }
 
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Problem {
     pub title: String,
@@ -230,7 +233,8 @@ impl Query {
                     translatedTitle
                     translatedContent
                 }
-            }"#.to_owned(),
+            }"#
+            .to_owned(),
         }
     }
 }

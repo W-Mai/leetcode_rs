@@ -66,9 +66,15 @@ async fn main() {
                         problem.title_slug
                     ),
                     "".to_string(),
-                    problem.code_definition.iter().find(|x| x.value == "rust").unwrap().default_code.clone(),
+                    problem
+                        .code_definition
+                        .iter()
+                        .find(|x| x.value == "rust")
+                        .unwrap()
+                        .default_code
+                        .clone(),
                 )
-                    .write(format!("./tests/{}-{}.rs", question_id, file_name).as_ref());
+                .write(format!("./tests/{}-{}.rs", question_id, file_name).as_ref());
             }
         }
     }
