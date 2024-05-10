@@ -55,15 +55,13 @@ async fn main() {
                 .then(|problem| async {
                     if let Some(problem) = problem {
                         let question_id = problem.question_id;
-                        let file_name = format!("{}-{}", problem.title_slug, problem.title)
+                        let file_name = format!("{}-{}", problem.title_slug, problem.title);
+                        let file_name = format!("./tests/{}-{}.rs", question_id, file_name)
                             .replace(" ", "_")
-                            .replace(".", "_")
                             .replace("?", "")
                             .replace("!", "")
                             .replace("(", "_")
                             .replace(")", "_");
-
-                        let file_name = format!("./tests/{}-{}.rs", question_id, file_name);
                         let code_definition =
                             problem.code_definition.iter().find(|x| x.value == "rust");
                         if code_definition.is_none() {
