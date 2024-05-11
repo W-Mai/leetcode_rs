@@ -54,7 +54,10 @@ async fn main() {
             fetcher::get_problem(&problem)
                 .then(|problem| async {
                     if let Some(problem) = problem {
-                        let question_id = problem.question_id;
+                        let question_id = match problem.question_id.parse::<i32>() {
+                            Ok(id) => format!("P{:06}", id),
+                            Err(_) => problem.question_id,
+                        };
                         let file_name = format!("{}-{}", problem.title_slug, problem.title);
                         let file_name = format!("./tests/{}-{}.rs", question_id, file_name)
                             .replace(" ", "_")
